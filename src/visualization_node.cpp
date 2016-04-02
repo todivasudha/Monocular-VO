@@ -9,6 +9,7 @@
 #include <image_transport/image_transport.h>
 #include <visualization_msgs/Marker.h>
 #include "opencv2/calib3d/calib3d.hpp"
+#include <geometry_msgs/Point.h>
 
 class Listener
 {
@@ -32,7 +33,7 @@ void Listener::Callback(const cv_bridge::CvImage &message)
 	marker.header.stamp = ros::Time();
 	marker.ns = "my_namespace";
 	marker.id = 0;
-	marker.type = visualization_msgs::Marker::LINE_STRIP;
+	marker.type = visualization_msgs::Marker::ARROW;
 	marker.action = visualization_msgs::Marker::ADD;
 	marker.pose.position.x = t.at<double>(0,0);
 	marker.pose.position.y = t.at<double>(1,0);
@@ -49,6 +50,30 @@ void Listener::Callback(const cv_bridge::CvImage &message)
 	marker.color.g = 1.0;
 	marker.color.b = 0.0;
 	pub.publish(marker);
+	/*visualization_msgs::Marker point, line_strip, marker;
+	point.header.frame_id = line_strip.header.frame_id = "map";
+	point.header.stamp = line_strip.header.stamp = ros::Time();
+	point.ns = line_strip.ns = "my_namespace";
+	point.id = 0;
+	line_strip.id = 1;
+	point.type = visualization_msgs::Marker::POINTS;
+	line_strip.type = visualization_msgs::Marker::LINE_STRIP;
+	point.action = line_strip.action = visualization_msgs::Marker::ADD;
+	point.frame_locked = line_strip.frame_locked = 0;
+	geometry_msgs::Point p;
+    p.x = t.at<double>(0,0);
+    p.y = t.at<double>(1,0);
+    p.z = t.at<double>(2,0);
+    point.points.push_back(p);
+    line_strip.points.push_back(p);
+	point.scale.x = 0.2;
+    point.scale.y = 0.2;
+	line_strip.scale.x = 0.1;
+	point.color.a = line_strip.color.a = 1.0;
+	point.color.g = 1.0;
+	line_strip.color.b = 1.0;
+	pub.publish(point);
+	pub.publish(line_strip);*/
 }
 
 int main(int argc, char** argv)
