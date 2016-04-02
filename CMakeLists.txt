@@ -78,7 +78,10 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
-add_executable(fundamental_mat src/fundamental_mat.cpp)
-target_link_libraries(fundamental_mat ${OpenCV_LIBRARIES} ${catkin_LIBRARIES})
-
+add_executable(camera_node src/camera_node.cpp)
+target_link_libraries(camera_node ${OpenCV_LIBRARIES} ${catkin_LIBRARIES})
+add_executable(visualization_node src/visualization_node.cpp)
+target_link_libraries(visualization_node ${OpenCV_LIBRARIES} ${catkin_LIBRARIES})
+add_executable(dataset_node src/dataset_node.cpp)
+target_link_libraries(dataset_node ${OpenCV_LIBRARIES} ${catkin_LIBRARIES})
 
