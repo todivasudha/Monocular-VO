@@ -84,4 +84,6 @@ add_executable(visualization_node src/visualization_node.cpp)
 target_link_libraries(visualization_node ${OpenCV_LIBRARIES} ${catkin_LIBRARIES})
 add_executable(dataset_node src/dataset_node.cpp)
 target_link_libraries(dataset_node ${OpenCV_LIBRARIES} ${catkin_LIBRARIES})
+add_executable(visualization_node1 src/visualization_node1.cpp)
+target_link_libraries(visualization_node1 ${OpenCV_LIBRARIES} ${catkin_LIBRARIES})
 
