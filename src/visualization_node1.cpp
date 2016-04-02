@@ -31,9 +31,9 @@ void Listener::Callback(const cv_bridge::CvImage &message)
 	odom.header.frame_id = "map";
 	odom.header.stamp = ros::Time();
 	odom.child_frame_id = "map";
-	odom.pose.pose.position.x = t.at<double>(0,0);
+	odom.pose.pose.position.x = t.at<double>(2,0);
 	odom.pose.pose.position.y = t.at<double>(1,0);
-	odom.pose.pose.position.z = t.at<double>(2,0);
+	odom.pose.pose.position.z = t.at<double>(0,0);
 	odom.pose.pose.orientation.x = 0.0;
 	odom.pose.pose.orientation.y = 0.0;
 	odom.pose.pose.orientation.z = 0.0;
