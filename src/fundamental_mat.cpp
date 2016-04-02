@@ -8,24 +8,16 @@
 #include <opencv2/video/tracking.hpp>
 #include "opencv2/calib3d/calib3d.hpp"
 #include "fast_detector.cpp"
-#include "ros/ros.h"
-#include <cv_bridge/cv_bridge.h>
-#include <image_transport/image_transport.h>
 
-cv::Mat prevImg;
-int c =0;
-void Callback(const cv_bridge::CvImage &message)
+cv::Mat fundamentalMat(cv::Mat prevImg, cv::Mat nextImg, cv::Mat C_n)
 {
-  cv ::Mat nextImg = message.image;
   if(!prevImg.data)
-    {
-      prevImg = nextImg;
-      return;
-    }
-   c++;
-   if(c==5) 
   {
-    std::vector<cv::KeyPoint> prevKeypoints = fastDetector(prevImg);
+    prevImg = nextImg;
+    return C_n;
+  }
+  cv::Mat C;
+  std::vector<cv::KeyPoint> prevKeypoints = fastDetector(prevImg);
   std::vector<cv::Point2f> prevPts;
   int i, j;
   for (i = 0; i < prevKeypoints.size(); ++i)
@@ -39,7 +31,7 @@ void Callback(const cv_bridge::CvImage &message)
   std::vector<cv::Point2f> srcPts, dstPts;
   int ransacReprojThreshold = 1;
   std::vector<uchar> mask;
-  cv::Mat F;
+  cv::Mat F, K, Kt, E;
   for (i = 0; i < prevPts.size(); i+=1)
   {
      if(status[i])
@@ -57,44 +49,33 @@ void Callback(const cv_bridge::CvImage &message)
        inlier++;
       }
    }
-   std::cout<<"\nNo. of points : "<<srcPts.size();
-   std::cout<<"\nNo. of inliers : "<<inlier;
-   std::cout<<"\n";
+   //std::cout<<"\nNo. of points : "<<srcPts.size();
+   //std::cout<<"\nNo. of inliers : "<<inlier;
+   //std::cout<<"\n";
    cv::namedWindow("window", CV_WINDOW_AUTOSIZE);
    cv::imshow("window", prevImg);
-   std::cout<<"Fundamental matrix : \n";
-   for (i = 0; i < 3; ++i)
-   {
-   	for (j = 0; j < 3; ++j)
-   	{
-  		std::cout<<F.at<double>(i,j)<<" ";
-  	}
-  	std::cout<<"\n";
-   }
-   prevImg = nextImg;
+   //std::cout<<"\nFundamental matrix : \n"<<F;
+
+   K = (cv::Mat_<double>(3,3) << 9.037596e+02, 0.000000e+00, 6.957519e+02, 0.000000e+00, 9.019653e+02, 2.242509e+02, 0.000000e+00, 0.000000e+00, 1.000000e+00);
+   cv::transpose(K, Kt);
+   E = Kt*F*K;
+   //std::cout<<"\nEssential matrix : \n"<<E;
+
+   cv::SVD A = cv::SVD(E, cv::SVD::FULL_UV);
+   cv::Mat W = (cv::Mat_<double>(3,3) << 0.0, -1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+   cv::Mat R = (A.u)*W*(A.vt);
+   cv::Mat t = A.u.col(2);
+   //std::cout<<"\nTranslation matrix : \n"<<t;
+   //std::cout<<"\nRotation matrix : \n"<<R;
+
+   cv::hconcat(R, t, C);
+   cv::Mat temp = (cv::Mat_<double>(1,4)<< 0, 0, 0, 1);
+   cv::vconcat(C, temp, C);
+   //std::cout<<"\nTrnformation : \n"<<C;
+   C_n = C_n*C;
+   //std::cout<<"\nIncremental pose : \n"<<C_n;
+   cv::Mat t1 = C_n.col(3);
+   std::cout<<"\n"<<t1;
    cv::waitKey(100);
-   c=0;
- }
-
-   
-}
-
-int main(int argc, char** argv)
-{
-  ros::init(argc, argv, "fundamental_mat");
-  //cv::Mat prevImg;
-  /*cv::VideoCapture cap("/home/vasudha/monocular VO/video/fi-bu-m2.avi");
-    cv::Mat prevImg, nextImg;
-    cap>>prevImg;
-    for (int i = 0; i < 5; ++i)
-    {
-      cap>>nextImg;
-    }*/
-  ros::NodeHandle n;
-  ros::Subscriber sub = n.subscribe("logitech_camera1/image", 1000, Callback);
-  
-  //cv::Mat prevImg = cv::imread("/home/vasudha/monocular VO/images/9.jpg", CV_LOAD_IMAGE_COLOR);
-  //cv::Mat nextImg = cv::imread("/home/vasudha/monocular VO/images/10.jpg", CV_LOAD_IMAGE_COLOR);
-  ros::spin();
-  return 0;
+   return C_n;  
 }
